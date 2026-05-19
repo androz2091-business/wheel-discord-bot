@@ -36,7 +36,8 @@ const
                             isEnabled: Joi.boolean().required(),
                             selectionMode: Joi
                                 .string()
-                                .valid('reaction', 'clanMember', 'online', 'clanMemberAndOnline'),
+                                .valid('reaction', 'clanMember', 'online', 'clanMemberAndOnline')
+                                .default('reaction'),
                             lastRunStartTimestamp: Joi.number().allow(null).default(null),
                             runDuration: durationSchema,
                             lastRunEndTimestamp: Joi.number().allow(null).default(null),
@@ -319,21 +320,50 @@ console.log('I am ready!');
                 }
                 catch {}
                 if(!message) continue;
-                const options = await Promise
-                    .resolve(message)
-                    .then(message => [...message.reactions.cache.values()])
-                    .then(reactions => reactions.flatMap(reaction => reaction.users.cache.filter(user => !user.bot).toJSON()))
-                    .then(users => [...new Set(users.map(user => user.id))])
-                    .then(userIds => userIds.map(userId => message.guild.members.cache.get(userId).displayName))
-                    .then(usernames => usernames.map(
-                        (
-                            username,
-                            index
-                        ) => ({
-                            label: username,
-                            color: getColorByIndex(index)
-                        })
-                    ));
+                let usernames;
+                if(item.selectionMode === 'reaction'){
+                    usernames = await Promise
+                        .resolve(message)
+                        .then(message => [...message.reactions.cache.values()])
+                        .then(reactions => reactions.flatMap(reaction => reaction.users.cache.filter(user => !user.bot).toJSON()))
+                        .then(users => [...new Set(users.map(user => user.id))])
+                        .then(userIds => userIds.map(userId => message.guild.members.cache.get(userId).displayName));
+                }
+                else {
+                    const
+                        needsOnline = ['online', 'clanMemberAndOnline'].includes(item.selectionMode),
+                        needsClan = ['clanMember', 'clanMemberAndOnline'].includes(item.selectionMode);
+                    await message.guild.members.fetch({ withPresences: needsOnline });
+                    usernames = message.guild.members.cache
+                        .filter(
+                            member =>
+                                !member.user.bot
+                                && (
+                                    !needsClan
+                                    ||
+                                    (
+                                        member.user.primaryGuild?.identityEnabled
+                                        &&
+                                        member.user.primaryGuild?.identityGuildId === message.guild.id
+                                    )
+                                )
+                                && (
+                                    !needsOnline
+                                    ||
+                                    (member.presence && !['invisible', 'offline'].includes(member.presence.status))
+                                )
+                        )
+                        .map(member => member.displayName);
+                }
+                const options = usernames.map(
+                    (
+                        username,
+                        index
+                    ) => ({
+                        label: username,
+                        color: getColorByIndex(index)
+                    })
+                );
                 if(!options.length) continue;
                 const winnerOption = options[Math.floor(Math.random() * options.length)];
                 winnerOption.winner = true;

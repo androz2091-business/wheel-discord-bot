@@ -34,6 +34,9 @@ const
                                 .required(),
                             startTimestamp: Joi.number().required(),
                             isEnabled: Joi.boolean().required(),
+                            selectionMode: Joi
+                                .string()
+                                .valid('reaction', 'clanMember', 'online', 'clanMemberAndOnline'),
                             lastRunStartTimestamp: Joi.number().allow(null).default(null),
                             runDuration: durationSchema,
                             lastRunEndTimestamp: Joi.number().allow(null).default(null),

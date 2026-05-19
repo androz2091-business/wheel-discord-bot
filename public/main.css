@@ -124,3 +124,17 @@
     flex-direction: column;
     row-gap: 0.5rem;
 }
+
+.EditItem__form__selectionMode,
+.EditItem__form__selectionMode__input {
+    display: flex;
+    align-items: center;
+}
+
+.EditItem__form__selectionMode {
+    justify-content: space-between;
+}
+
+.EditItem__form__selectionMode__input {
+    column-gap: 0.25rem;
+}

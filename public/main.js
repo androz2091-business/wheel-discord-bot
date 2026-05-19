@@ -231,6 +231,7 @@ const
         data: () => ({
             isEnabledInput: undefined,
             messageContentInput: undefined,
+            selectionModeInput: undefined,
             runDurationInput: undefined,
             startTimestampInput: undefined,
             intervalInput: undefined,
@@ -240,12 +241,13 @@ const
         }),
         methods: {
             onSubmit: async function(){
-                if(!dayjs.duration(this.runDurationInput).valueOf())
+                if(this.selectionModeInput === 'reaction' && !dayjs.duration(this.runDurationInput).valueOf())
                     return this.isRunDurationInvalid = true;
                 this.isSaving = true;
                 await this.save({
                     startTimestamp: dayjs(this.startTimestampInput).valueOf(),
                     isEnabled: this.isEnabledInput,
+                    selectionMode: this.selectionModeInput,
                     runDuration: this.runDurationInput,
                     duration: this.durationInput,
                     interval: this.intervalInput,
@@ -265,6 +267,7 @@ const
         beforeMount: function(){
             this.isEnabledInput = this.item.isEnabled || false;
             this.messageContentInput = this.item.messageContent;
+            this.selectionModeInput = this.item.selectionMode || 'reaction';
             this.runDurationInput = this.item.runDuration || {};
             this.startTimestampInput = dayjs(this.item.startTimestamp).format('YYYY-MM-DDTHH:mm:ss');
             this.intervalInput = this.item.interval || {};
@@ -336,11 +339,54 @@ const
                             ref="contentInput"
                         ></textarea>
                     </label>
-                    <span>Run duration</span>
-                    <durationInput
-                        v-model="runDurationInput"
-                        :is-invalid="isRunDurationInvalid"
-                    />
+                    <span>Selection mode</span>
+                    <div class="EditItem__form__selectionMode">
+                        <label
+                            class="EditItem__form__selectionMode__input"
+                        ><input
+                            class="form-check-input"
+                            type="radio"
+                            name="selectionMode"
+                            value="reaction"
+                            v-model="selectionModeInput"
+                        >Reaction</label>
+                        <label
+                            class="EditItem__form__selectionMode__input"
+                        ><input
+                            class="form-check-input"
+                            type="radio"
+                            name="selectionMode"
+                            value="clanMember"
+                            v-model="selectionModeInput"
+                        >Clan member</label>
+                        <label
+                            class="EditItem__form__selectionMode__input"
+                        ><input
+                            class="form-check-input"
+                            type="radio"
+                            name="selectionMode"
+                            value="online"
+                            v-model="selectionModeInput"
+                        >Online</label>
+                        <label
+                            class="EditItem__form__selectionMode__input"
+                        ><input
+                            class="form-check-input"
+                            type="radio"
+                            name="selectionMode"
+                            value="clanMemberAndOnline"
+                            v-model="selectionModeInput"
+                        >Clan + online</label>
+                    </div>
+                    <template
+                        v-if="selectionModeInput === 'reaction'"
+                    >
+                        <span>Run duration</span>
+                        <durationInput
+                            v-model="runDurationInput"
+                            :is-invalid="isRunDurationInvalid"
+                        />
+                    </template>
                     <label style="display: contents">
                         <span>Start date</span>
                         <input
@@ -350,7 +396,10 @@ const
                             v-model="startTimestampInput"
                         >
                     </label>
-                    <label style="display: contents">
+                    <label
+                        v-if="selectionModeInput === 'reaction'"
+                        style="display: contents"
+                    >
                         <span>Countdown</span>
                         <button
                             class="btn btn-secondary"
@@ -483,7 +532,7 @@ const
                                 >{{ item.messageContent }}</td>
                                 <td
                                     class="Main__schedule__item__runDuration"
-                                >{{ humanize(dayjs.duration(item.runDuration).valueOf()) }}</td>
+                                >{{ item.runDuration && dayjs.duration(item.runDuration).valueOf() ? humanize(dayjs.duration(item.runDuration).valueOf()) : '-' }}</td>
                                 <td
                                     class="Main__schedule__item__startDate"
                                     :title="item.startTimestamp ? dayjs(item.startTimestamp).format('dddd, MMMM D, YYYY hh:mm:ss A') : undefined"

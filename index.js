@@ -171,6 +171,28 @@ client.on('interactionCreate', async (interaction) => {
 
         }
 
+        if (interaction.commandName === 'wheel-clan-members' || interaction.commandName === 'wheel-clan-members-online') {
+
+            const onlineOnly = interaction.commandName === 'wheel-clan-members-online';
+
+            await interaction.guild.members.fetch({
+                withPresences: onlineOnly
+            });
+
+            const options = interaction.guild.members.cache.filter((m) =>
+                !m.user.bot
+                && m.user.primaryGuild?.identityEnabled
+                && m.user.primaryGuild?.identityGuildId === interaction.guild.id
+                && (!onlineOnly || (m.presence && m.presence.status !== 'invisible' && m.presence.status !== 'offline'))
+            ).map((opt, idx) => ({
+                label: opt.user.username,
+                color: getColorByIndex(idx)
+            }));
+
+            await generateAndSendWheel(interaction, options);
+
+        }
+
         if (interaction.commandName === 'wheel-members-online-role') {
 
             await interaction.guild.members.fetch({

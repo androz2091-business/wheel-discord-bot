@@ -11,7 +11,7 @@
         "canvas": "^3.2.0",
         "chrono-node": "^2.9.0",
         "dayjs": "^1.11.19",
-        "discord.js": "^14.9.0",
+        "discord.js": "14.22.1",
         "fastify": "^5.6.2",
         "gif-encoder-2": "^1.0.5",
         "gifken": "^3.0.4",

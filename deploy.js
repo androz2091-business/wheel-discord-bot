@@ -42,6 +42,14 @@ const commands = [
         description: 'Spin the wheel using online role members'
     },
     {
+        name: 'wheel-clan-members',
+        description: 'Spin the wheel using members with the guild clan tag'
+    },
+    {
+        name: 'wheel-clan-members-online',
+        description: 'Spin the wheel using online members with the guild clan tag'
+    },
+    {
         name: 'wheel-reactions-schedule',
         description: 'Spin the wheel with reactions on a schedule',
         options: [

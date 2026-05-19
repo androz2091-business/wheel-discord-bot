@@ -272,7 +272,7 @@ client.on('interactionCreate', async (interaction) => {
 
 await Promise.all([
     client.login(process.env.DISCORD_BOT_TOKEN),
-    new Promise(resolve => client.once('ready', resolve))
+    new Promise(resolve => client.once('clientReady', resolve))
 ]);
 
 console.log('I am ready!');

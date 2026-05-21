@@ -257,7 +257,7 @@ const
             insertCountdown: function(){
                 if(this.isRunDurationInvalid) return;
                 this.messageContentInput ??= '';
-                this.messageContentInput += `<t:${
+                this.messageContentInput += `**Wheel Spins** <t:${
                     dayjs(this.startTimestampInput)
                         .add(dayjs.duration(this.runDurationInput).asMilliseconds(), 'milliseconds')
                         .unix()

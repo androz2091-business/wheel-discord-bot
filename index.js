@@ -105,7 +105,22 @@ const
         hours: duration.hours(),
         minutes: duration.minutes(),
         seconds: duration.seconds()
-    });
+    }),
+    MEMBERS_FETCH_INTERVAL = 30_000,
+    guildMembersFetchState = new Map(),
+    fetchGuildMembers = guild => {
+        const state = guildMembersFetchState.get(guild.id);
+        if(state){
+            if(state.promise) return state.promise;
+            if(Date.now() - state.timestamp < MEMBERS_FETCH_INTERVAL)
+                return Promise.resolve(guild.members.cache);
+        }
+        const promise = guild.members
+            .fetch({ withPresences: true })
+            .finally(() => guildMembersFetchState.set(guild.id, { timestamp: Date.now(), promise: null }));
+        guildMembersFetchState.set(guild.id, { timestamp: Date.now(), promise });
+        return promise;
+    };
 
 const client = new Discord.Client({
     intents: Object
@@ -162,9 +177,7 @@ client.on('interactionCreate', async (interaction) => {
 
         if (interaction.commandName === 'wheel-members-online') {
 
-            await interaction.guild.members.fetch({
-                withPresences: true
-            });
+            await fetchGuildMembers(interaction.guild);
 
             const options = interaction.guild.members.cache.filter((m) => m.presence && m.presence?.status !== 'invisible' && !m.user.bot) .map((opt, idx) => ({
                 label: opt.user.username,
@@ -179,9 +192,7 @@ client.on('interactionCreate', async (interaction) => {
 
             const onlineOnly = interaction.commandName === 'wheel-clan-members-online';
 
-            await interaction.guild.members.fetch({
-                withPresences: onlineOnly
-            });
+            await fetchGuildMembers(interaction.guild);
 
             const options = interaction.guild.members.cache.filter((m) =>
                 !m.user.bot
@@ -199,9 +210,7 @@ client.on('interactionCreate', async (interaction) => {
 
         if (interaction.commandName === 'wheel-members-online-role') {
 
-            await interaction.guild.members.fetch({
-                withPresences: true
-            });
+            await fetchGuildMembers(interaction.guild);
 
             const options = interaction.guild.members.cache.filter((m) => m.roles.cache.has('1029342182613725246') && !m.user.bot).map((opt, idx) => ({
                 label: opt.user.username,
@@ -333,7 +342,7 @@ console.log('I am ready!');
                     const
                         needsOnline = ['online', 'clanMemberAndOnline'].includes(item.selectionMode),
                         needsClan = ['clanMember', 'clanMemberAndOnline'].includes(item.selectionMode);
-                    await message.guild.members.fetch({ withPresences: needsOnline });
+                    await fetchGuildMembers(message.guild);
                     usernames = message.guild.members.cache
                         .filter(
                             member =>

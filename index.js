@@ -10,6 +10,27 @@ import { initFastify } from './fastify.js';
 
 dayjs.extend(dayjsDuration);
 
+if(!process.env.NO_RESPAWN) process.on(
+    'uncaughtException',
+    error => {
+        console.error(error);
+        process.once(
+            'exit',
+            () => spawn(
+                process.argv.shift(),
+                process.argv,
+                {
+                    cwd: process.cwd(),
+                    detached: true,
+                    stdio: 'inherit'
+                }
+            )
+        );
+        process.exit();
+    }
+);
+process.on('unhandledRejection', error => console.error(error));
+
 const
     validateData = data => {
         const durationSchema = Joi.object({
